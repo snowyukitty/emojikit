@@ -1,0 +1,24 @@
+# envs & caches
+.venv/
+__pycache__/
+*.pyc
+
+# generated artifacts
+output/
+web_data/
+rigs/
+*.zip
+
+# model weights (downloaded on first use)
+*.onnx
+*.pt
+
+# logs
+*.log
+
+# user-supplied demo image (uncertain license); fox.png (Noto) is the bundled example
+assets/hugcats.png
+
+# local claude config & extra test asset
+.claude/
+assets/cat.jpg

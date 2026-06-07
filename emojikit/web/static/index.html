@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>emojikit · static → animated emoji studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="bg-blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">✨</span>
+      <div>
+        <h1>emojikit</h1>
+        <p>static image → animated emoji studio</p>
+      </div>
+    </div>
+    <a class="ghost-link" href="https://github.com" target="_blank" rel="noopener">part-puppet engine · v5</a>
+  </header>
+
+  <main class="grid">
+    <!-- LEFT: source + auto-rig -->
+    <section class="card source-card">
+      <div class="card-head">
+        <h2><span class="step">1</span> Drop a character</h2>
+        <span class="hint">any animal · cartoon · mascot</span>
+      </div>
+
+      <div id="dropzone" class="dropzone">
+        <input id="file" type="file" accept="image/*" hidden />
+        <div class="dz-empty">
+          <div class="dz-icon">🐾</div>
+          <p><strong>Drag &amp; drop</strong> an image here</p>
+          <p class="muted">or <button class="link-btn" id="browse">browse files</button></p>
+          <p class="tiny muted">PNG / JPG · we auto-remove the background</p>
+        </div>
+        <div class="dz-stage" hidden>
+          <div class="stage-toggle">
+            <button data-view="overlay" class="active">Rig</button>
+            <button data-view="master">Clean</button>
+          </div>
+          <div class="stage-img" id="stageImg">
+            <img id="imgOverlay" alt="detected rig" />
+            <img id="imgMaster" alt="clean cutout" hidden />
+            <div id="handles" class="handles"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rigInfo" class="rig-info" hidden>
+        <div class="chips-row" id="partChips"></div>
+        <div class="edit-bar">
+          <span class="tiny muted">drag joints to reposition · ✕ removes a part</span>
+          <button id="saveRig" class="mini-btn">Apply edits</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: studio -->
+    <section class="card studio-card">
+      <div class="card-head">
+        <h2><span class="step">2</span> Pick an emote</h2>
+        <span class="hint">one rig · many animations</span>
+      </div>
+
+      <div id="presetGrid" class="preset-grid"></div>
+
+      <div class="card-head" style="margin-top:22px">
+        <h2><span class="step">3</span> Preview &amp; export</h2>
+        <div class="bg-toggle" id="bgToggle">
+          <button data-bg="light" class="active">☀︎ light</button>
+          <button data-bg="dark">☾ dark</button>
+        </div>
+      </div>
+
+      <div id="previewArea" class="preview-area">
+        <div class="placeholder" id="previewPlaceholder">
+          <div class="ph-emoji">🎬</div>
+          <p>Drop an image, then choose an emote to see it come alive.</p>
+        </div>
+
+        <div class="preview-stage" id="previewStage" hidden>
+          <div class="hero" id="heroStage">
+            <img id="heroGif" alt="preview" />
+          </div>
+          <div class="sizes" id="sizeStrip"></div>
+        </div>
+      </div>
+
+      <div id="exportBlock" class="export-block" hidden>
+        <div class="export-actions">
+          <a id="dlPreset" class="action-btn primary">⬇ This emote (.zip)</a>
+          <button id="dlPack" class="action-btn">📦 Export full pack (all emotes)</button>
+        </div>
+        <div class="platforms" id="platforms"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="overlayLoader" class="loader" hidden>
+    <div class="spinner"></div>
+    <p id="loaderText">Working…</p>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <footer class="foot">made with the emojikit puppet engine · bend-rigged, transparent, seamless loops</footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Core
+Pillow>=10.0
+numpy>=1.24
+typer>=0.9
+
+# Function 1 background removal (lazy-imported; downloads ~176MB model on first use)
+rembg>=2.0
+onnxruntime>=1.16
+
+# Animated-emote puppet engine
+scikit-image>=0.22     # silhouette analysis (auto-rig)
+ultralytics>=8.4       # SAM-assisted segmentation (optional, semi-auto rig)
+
+# Web UI
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
