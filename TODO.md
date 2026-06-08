@@ -17,9 +17,15 @@
 ## Nice-to-have / future
 - [ ] Web: add-a-part (draw/brush a mask) in addition to drag-pivot + delete.
 - [ ] Web: per-part reach slider; live (debounced) re-render preview.
+- [ ] Web: real backend progress via SSE/WebSocket (current progress bars are estimated stages,
+      since each endpoint is a single blocking request — accurate enough, but not live).
+- [ ] Web: prune old `web_data/<session>/<preset>/_frames/` PNGs (preview frames accumulate on disk).
 - [ ] Batch: drag multiple images → auto-pack each.
 - [ ] APNG output option (true alpha, for platforms that accept it).
 - [ ] v4 face landmarks: detect mouth for talk/laugh expressions.
 
 ## Done this session
 - v5 web studio · in-browser rig editing (drag joints, delete parts) · zip + full-pack export.
+- v6 studio redesign · light/dark design-token system (segmented theme switch, flash-free) ·
+  searchable + category-filtered emote picker · real playback controls (play/pause/scrub/retime
+  via per-frame preview PNGs) · staged progress for upload/animate/pack · refreshed docs screenshots.

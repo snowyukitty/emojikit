@@ -32,12 +32,14 @@ app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
 
 _FRAMES: dict[tuple, list] = {}
 
-# emoji glyph + accent per preset for the UI
+# emoji glyph + accent + category per preset for the UI
 PRESET_META = {
-    "love": ("💞", "#ff6b9d"), "dance": ("💃", "#9b6bff"), "celebrate": ("🎉", "#ffb84d"),
-    "happy": ("✨", "#ffd24d"), "shocked": ("❗", "#ff5d5d"), "confused": ("❓", "#5db4ff"),
-    "sleep": ("😴", "#7aa7ff"), "sad": ("🥺", "#6b9bd1"), "angry": ("😡", "#ff5a45"),
-    "yes": ("✅", "#57c97a"), "no": ("🙅", "#ff8a8a"), "shy": ("☺️", "#ff9ec7"),
+    "love": ("💞", "#ff6b9d", "Positive"), "dance": ("💃", "#9b6bff", "Hype"),
+    "celebrate": ("🎉", "#ffb84d", "Hype"), "happy": ("✨", "#ffd24d", "Positive"),
+    "shocked": ("❗", "#ff5d5d", "Reaction"), "confused": ("❓", "#5db4ff", "Reaction"),
+    "sleep": ("😴", "#7aa7ff", "Mood"), "sad": ("🥺", "#6b9bd1", "Mood"),
+    "angry": ("😡", "#ff5a45", "Mood"), "yes": ("✅", "#57c97a", "Positive"),
+    "no": ("🙅", "#ff8a8a", "Reaction"), "shy": ("☺️", "#ff9ec7", "Positive"),
 }
 
 PALETTE = [(255, 91, 110), (75, 160, 255), (66, 200, 120), (255, 170, 60),
@@ -53,8 +55,9 @@ def index():
 def presets():
     out = []
     for name, pr in P.LIBRARY.items():
-        emoji, accent = PRESET_META.get(name, ("⭐", "#888"))
-        out.append({"name": name, "desc": pr.desc, "emoji": emoji, "accent": accent})
+        emoji, accent, category = PRESET_META.get(name, ("⭐", "#888", "Other"))
+        out.append({"name": name, "desc": pr.desc, "emoji": emoji,
+                    "accent": accent, "category": category})
     return out
 
 
@@ -140,7 +143,7 @@ def zip_preset(session: str, preset: str):
     zpath = DATA / session / f"{preset}.zip"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sdir.rglob("*"):
-            if f.is_file():
+            if f.is_file() and "_frames" not in f.parts:   # skip preview-only PNGs
                 z.write(f, f.relative_to(sdir.parent))
     return FileResponse(zpath, filename=f"{preset}_emote.zip")
 
@@ -183,7 +186,26 @@ def animate(payload: dict = Body(...)):
         rel = Path(o["file"]).relative_to(DATA).as_posix()
         sizes.append({"platform": o["platform"], "size": o["size"], "bytes": o["bytes"],
                       "budget": o["budget"], "fit": o["fit"], "url": f"/files/{rel}"})
-    return {"preset": preset, "outputs": sizes, "webp": f"/files/{sid}/{preset}/master.webp"}
+
+    # preview-size per-frame PNGs let the browser scrub/pause/retime the loop
+    # (a <img> GIF can only autoplay at a fixed speed).
+    preview = _preview_frames(sid, preset, frames)
+    return {"preset": preset, "outputs": sizes, "webp": f"/files/{sid}/{preset}/master.webp",
+            "frames": preview, "fps": rig.fps}
+
+
+_PREVIEW_PX = 256
+
+
+def _preview_frames(sid: str, preset: str, frames) -> list[str]:
+    fdir = DATA / sid / preset / "_frames"
+    fdir.mkdir(parents=True, exist_ok=True)
+    urls = []
+    for i, fr in enumerate(frames):
+        im = fr.resize((_PREVIEW_PX, _PREVIEW_PX), Image.LANCZOS)
+        im.save(fdir / f"{i:03d}.png")
+        urls.append(f"/files/{sid}/{preset}/_frames/{i:03d}.png")
+    return urls
 
 
 def main(host="127.0.0.1", port=8000):

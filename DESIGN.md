@@ -267,6 +267,12 @@ bend/squash/composite/encode. The rig JSON keeps it reproducible and re-editable
   auto-rig (visualized: parts coloured, pivots, eyes) → pick from 12 emote presets → live preview at
   128/112/56/28 on light/dark → per-platform export with byte readouts + download. Launch:
   `emojikit serve`. (Render ~3s + encode ~3s per emote after bbox-bend + fast-webp optimizations.)
+- **v6 (done):** studio UI redesign — a proper light/dark **design-token system** (segmented theme
+  switch, persisted + flash-free; light = warm white/coral, dark = deep slate/cyan), a **searchable +
+  category-filtered** emote picker, **real playback controls** (play/pause/scrub/0.5–2× retime, driven
+  by per-frame preview PNGs since a GIF `<img>` can't be paused or retimed in-browser), and **staged
+  progress** for upload/animate/pack. Backend additions: `/api/presets` returns a `category`;
+  `/api/animate` also emits preview-size per-frame PNGs (`_frames/`, excluded from the per-emote zip).
 
 (Alternative AI route — local AnimateDiff/SVD on the RTX 3070 — remains available for organic motion,
 but the puppet path is the one that guarantees clean alpha, perfect loops, and controllable, on-theme

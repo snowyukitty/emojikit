@@ -50,6 +50,19 @@ Key options: `--focus none|top|center` (top = crop to head of portraits/animals)
 
 Drag a character → it auto-rigs (parts + pivots + eyes, visualized) → pick from 12 emote
 presets → live preview at 28/56/112/128 on light/dark → download per platform.
+
+The studio UI (`emojikit/web/static/`) is a hand-built light/dark design system:
+
+- **Light & dark themes** — a segmented switch (light / follow-system / dark), persisted to
+  `localStorage` and resolved before first paint (no flash). Light = warm white + coral accent,
+  dark = deep slate + cyan accent.
+- **Searchable emote picker** — type to filter (`/` focuses, `Esc` clears) or filter by category
+  (Positive / Hype / Reaction / Mood), with a live "N of 12" count.
+- **Real playback controls** — the hero preview is driven by per-frame PNGs (a `<img>` GIF can only
+  autoplay at a fixed rate), so you can **play/pause, scrub, and retime** the loop at 0.5×/1×/2×.
+  The size swatches below stay as the true exported GIFs at native sizes.
+- **Staged progress** — upload, animate, and pack each show a stepped progress bar with stage labels.
+
 See `docs/ui_landing.png` and `docs/ui_result.png`.
 
 ### Animated emotes — puppet engine (CLI)

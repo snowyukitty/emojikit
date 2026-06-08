@@ -1,26 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>emojikit · static → animated emoji studio</title>
+<title>emojikit — static image to animated emoji studio</title>
+<meta name="color-scheme" content="light dark" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/static/style.css" />
+<script>
+  // Resolve theme before first paint to avoid a flash.
+  (function () {
+    const saved = localStorage.getItem("ek-theme") || "auto";
+    const sys = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = saved === "auto" ? sys : saved;
+    document.documentElement.dataset.themePref = saved;
+  })();
+</script>
 </head>
 <body>
-  <div class="bg-blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark">✨</span>
-      <div>
+      <span class="brand-mark">✦</span>
+      <div class="brand-text">
         <h1>emojikit</h1>
         <p>static image → animated emoji studio</p>
       </div>
     </div>
-    <a class="ghost-link" href="https://github.com" target="_blank" rel="noopener">part-puppet engine · v5</a>
+    <div class="topbar-right">
+      <span class="version-chip">part-puppet engine · v5</span>
+      <div class="theme-switch" id="themeSwitch" role="tablist" aria-label="Theme">
+        <button data-theme-val="light" title="Light" aria-label="Light">☀</button>
+        <button data-theme-val="auto" title="Follow system" aria-label="System">◐</button>
+        <button data-theme-val="dark" title="Dark" aria-label="Dark">☾</button>
+      </div>
+    </div>
   </header>
 
   <main class="grid">
@@ -28,19 +45,19 @@
     <section class="card source-card">
       <div class="card-head">
         <h2><span class="step">1</span> Drop a character</h2>
-        <span class="hint">any animal · cartoon · mascot</span>
+        <span class="hint">animal · cartoon · mascot</span>
       </div>
 
       <div id="dropzone" class="dropzone">
         <input id="file" type="file" accept="image/*" hidden />
         <div class="dz-empty">
           <div class="dz-icon">🐾</div>
-          <p><strong>Drag &amp; drop</strong> an image here</p>
+          <p class="dz-title"><strong>Drag &amp; drop</strong> an image</p>
           <p class="muted">or <button class="link-btn" id="browse">browse files</button></p>
-          <p class="tiny muted">PNG / JPG · we auto-remove the background</p>
+          <p class="tiny muted">PNG / JPG · background removed automatically</p>
         </div>
         <div class="dz-stage" hidden>
-          <div class="stage-toggle">
+          <div class="stage-toggle" role="tablist">
             <button data-view="overlay" class="active">Rig</button>
             <button data-view="master">Clean</button>
           </div>
@@ -49,7 +66,14 @@
             <img id="imgMaster" alt="clean cutout" hidden />
             <div id="handles" class="handles"></div>
           </div>
+          <button class="stage-replace" id="replaceBtn" title="Replace image">↻ replace</button>
         </div>
+      </div>
+
+      <!-- staged progress for upload / auto-rig -->
+      <div id="srcProgress" class="progress" hidden>
+        <div class="progress-track"><div class="progress-bar" id="srcBar"></div></div>
+        <p class="progress-label" id="srcLabel">Working…</p>
       </div>
 
       <div id="rigInfo" class="rig-info" hidden>
@@ -65,15 +89,25 @@
     <section class="card studio-card">
       <div class="card-head">
         <h2><span class="step">2</span> Pick an emote</h2>
-        <span class="hint">one rig · many animations</span>
+        <span class="hint" id="presetCount"></span>
+      </div>
+
+      <div class="studio-controls">
+        <div class="search">
+          <span class="search-ico">⌕</span>
+          <input id="presetSearch" type="search" placeholder="Search emotes…" autocomplete="off" />
+          <kbd class="search-kbd">/</kbd>
+        </div>
+        <div class="cat-chips" id="catChips"></div>
       </div>
 
       <div id="presetGrid" class="preset-grid"></div>
+      <p id="presetEmpty" class="preset-empty" hidden>No emote matches that.</p>
 
-      <div class="card-head" style="margin-top:22px">
+      <div class="card-head section-gap">
         <h2><span class="step">3</span> Preview &amp; export</h2>
         <div class="bg-toggle" id="bgToggle">
-          <button data-bg="light" class="active">☀︎ light</button>
+          <button data-bg="light" class="active">☀ light</button>
           <button data-bg="dark">☾ dark</button>
         </div>
       </div>
@@ -81,21 +115,36 @@
       <div id="previewArea" class="preview-area">
         <div class="placeholder" id="previewPlaceholder">
           <div class="ph-emoji">🎬</div>
-          <p>Drop an image, then choose an emote to see it come alive.</p>
+          <p>Drop an image, then choose an emote to bring it alive.</p>
         </div>
 
         <div class="preview-stage" id="previewStage" hidden>
-          <div class="hero" id="heroStage">
-            <img id="heroGif" alt="preview" />
+          <div class="hero-col">
+            <div class="hero" id="heroStage">
+              <img id="heroGif" alt="preview" />
+            </div>
+
+            <!-- playback controls (driven by per-frame PNGs) -->
+            <div class="player" id="player">
+              <button class="play-btn" id="playBtn" title="Play / pause" aria-label="Play/pause">❚❚</button>
+              <input type="range" id="scrub" class="scrub" min="0" max="0" value="0" step="1" />
+              <span class="frame-count" id="frameCount">0 / 0</span>
+              <div class="speed" id="speed" role="tablist" aria-label="Speed">
+                <button data-rate="0.5">0.5×</button>
+                <button data-rate="1" class="active">1×</button>
+                <button data-rate="2">2×</button>
+              </div>
+            </div>
           </div>
+
           <div class="sizes" id="sizeStrip"></div>
         </div>
       </div>
 
       <div id="exportBlock" class="export-block" hidden>
         <div class="export-actions">
-          <a id="dlPreset" class="action-btn primary">⬇ This emote (.zip)</a>
-          <button id="dlPack" class="action-btn">📦 Export full pack (all emotes)</button>
+          <a id="dlPreset" class="action-btn primary">↓ This emote <span class="muted-on-primary">.zip</span></a>
+          <button id="dlPack" class="action-btn">📦 Export full pack</button>
         </div>
         <div class="platforms" id="platforms"></div>
       </div>
@@ -103,13 +152,15 @@
   </main>
 
   <div id="overlayLoader" class="loader" hidden>
-    <div class="spinner"></div>
-    <p id="loaderText">Working…</p>
+    <div class="loader-card">
+      <div class="progress-track wide"><div class="progress-bar" id="loadBar"></div></div>
+      <p id="loaderText">Working…</p>
+    </div>
   </div>
 
   <div id="toast" class="toast" hidden></div>
 
-  <footer class="foot">made with the emojikit puppet engine · bend-rigged, transparent, seamless loops</footer>
+  <footer class="foot">emojikit puppet engine · bend-rigged · transparent · seamless loops</footer>
 
   <script src="/static/app.js"></script>
 </body>
