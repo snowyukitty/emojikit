@@ -84,8 +84,10 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
     base = Image.new("RGBA", (cv, cv), (0, 0, 0, 0))
     base.alpha_composite(load_rgba(rig.src), tuple(rig.offset))
 
-    # split parts; body = base minus the union of all part masks
+    # split parts; body = base minus the union of all part masks. The head (if any) is
+    # a first-class part rendered with its own neck-joint motion (nod/shake/tilt).
     part_imgs = []
+    head_part = None
     union = Image.new("L", (cv, cv), 0)
     for p in rig.parts:
         m = Image.open(p.mask).convert("L")
@@ -93,7 +95,10 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
             m = m.resize((cv, cv))
         layer = Image.new("RGBA", (cv, cv), (0, 0, 0, 0))
         layer.paste(base, (0, 0), m)
-        part_imgs.append((p, layer))
+        if p.role == "head":
+            head_part = (p, layer)
+        else:
+            part_imgs.append((p, layer))
         union = ImageChops.lighter(union, m)
     body0 = base.copy()
     body0.putalpha(ImageChops.multiply(body0.getchannel("A"), union.point(lambda v: 255 - v)))
@@ -112,24 +117,64 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
         s = warp.ping(t)
         osc = math.sin(2 * math.pi * pr.cycles * t)
 
+        # head motion (relative to body): nod dips down only (seam-safe), shake/tilt
+        # rotate about the neck joint via seam-free bend. Anchors follow the head.
+        head_ang = pr.head_tilt * warp.ping(t) + pr.head_shake * osc
+        head_dy = pr.head_nod * (0.5 - 0.5 * math.cos(2 * math.pi * pr.cycles * t))
+
+        def head_xform(pt):
+            if head_part is None:
+                return pt
+            hp, _ = head_part
+            q = warp.bend_point(pt, tuple(hp.pivot), head_ang, hp.reach)
+            return (q[0], q[1] + head_dy)
+
         # body squash (squeeze) and slump (droop), feet planted
         body = warp.scale_about(body0, feet, 1.0 - pr.squeeze * s, 1.0 + pr.squeeze * 0.6 * s - pr.droop * s)
-        if eyeband and pr.blink:
+        # blink lives on the head layer when the head is split off, else on the body
+        if eyeband and pr.blink and head_part is None:
             bt = max(0.0, 1.0 - abs(t - 0.18) / 0.05)
             body = _apply_blink(body, eyeband, 1.0 - 0.5 * bt)
 
-        # parts (bend by role; tails use preset amp), drawn under body
+        # under-body parts (tails/legs): bend by role with a follow-through lag (tip
+        # trails the body for secondary motion)
         char = Image.new("RGBA", (cv, cv), (0, 0, 0, 0))
         for p, layer in sorted(part_imgs, key=lambda pl: pl[0].z):
+            if p.z >= 0:
+                continue
             amp = pr.tail_amp if p.role == "tail" else {"ear": 6.0, "arm": 8.0}.get(p.role, 0.0)
-            ang = amp * math.sin(2 * math.pi * pr.part_cycles * t + (0.7 * math.pi if "yellow" in p.name else 0.0))
+            ph = 0.7 * math.pi if "yellow" in p.name else 0.0
+            ang = amp * math.sin(2 * math.pi * pr.part_cycles * t - 0.5 + ph)
             char.alpha_composite(warp.bend(layer, tuple(p.pivot), ang, reach=p.reach))
         char.alpha_composite(body)
+        # over-body parts (arms), then the head with its own motion
+        for p, layer in sorted(part_imgs, key=lambda pl: pl[0].z):
+            if p.z < 0:
+                continue
+            amp = {"ear": 6.0, "arm": 8.0}.get(p.role, 0.0)
+            ang = amp * math.sin(2 * math.pi * pr.part_cycles * t - 0.5)
+            char.alpha_composite(warp.bend(layer, tuple(p.pivot), ang, reach=p.reach))
+        if head_part is not None:
+            hp, hlayer = head_part
+            if eyeband and pr.blink:
+                bt = max(0.0, 1.0 - abs(t - 0.18) / 0.05)
+                hlayer = _apply_blink(hlayer, eyeband, 1.0 - 0.5 * bt)
+            hlayer = warp.bend(hlayer, tuple(hp.pivot), head_ang, reach=hp.reach)
+            char.alpha_composite(hlayer, (0, int(round(head_dy))))
+
+        # jump: anticipation crouch -> stretch -> landing squash, applied to the whole
+        # character about the feet (squash + stretch principle)
+        if pr.jump > 0:
+            lift, sq = warp.jump_profile(pr.cycles * t)
+            char = warp.scale_about(char, feet, 1.0 + 0.12 * sq, 1.0 - 0.18 * sq)
+            jump_dy = -pr.jump * lift
+        else:
+            lift, jump_dy = 0.0, 0.0
 
         # whole-character sway + vertical bob/jump
         if abs(pr.sway_deg) > 0.01:
             char = warp.rotate_about(char, feet, pr.sway_deg * osc)
-        dy = pr.bob * (0.5 - 0.5 * math.cos(2 * math.pi * pr.cycles * t)) - pr.jump * abs(math.sin(math.pi * pr.cycles * t))
+        dy = pr.bob * (0.5 - 0.5 * math.cos(2 * math.pi * pr.cycles * t)) + jump_dy
         if abs(dy) > 0.5:
             sh = Image.new("RGBA", (cv, cv), (0, 0, 0, 0))
             sh.alpha_composite(char, (0, int(round(dy))))
@@ -145,15 +190,16 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
         frame = Image.new("RGBA", (cv, cv), (0, 0, 0, 0))
         frame.alpha_composite(char)
 
-        # --- expression overlays
+        # --- expression overlays (anchors follow the head so they stay on the face)
         if rig.blush and pr.blush > 0:
             a = int(180 * pr.blush * (0.6 + 0.4 * math.sin(2 * math.pi * t)))
-            frame.alpha_composite(overlays.draw_blush((cv, cv), [rig.C(*b) for b in rig.blush], 30, 18, alpha=max(0, a)))
+            frame.alpha_composite(overlays.draw_blush((cv, cv), [head_xform(rig.C(*b)) for b in rig.blush],
+                                                      30, 18, alpha=max(0, a)))
         if rig.eyes and pr.heart_eyes > 0:
             he = warp.ease_io(max(0.0, 1.0 - abs(t - 0.5) / 0.28)) * pr.heart_eyes
             if he > 0.03:
                 for ex, ey in rig.eyes:
-                    cx, cyy = rig.C(ex, ey - 6 * he)
+                    cx, cyy = head_xform(rig.C(ex, ey - 6 * he))
                     frame.alpha_composite(overlays.draw_heart((cv, cv), cx, cyy, 20 * he,
                                           color=(255, 70, 110), alpha=int(235 * he), outline=(200, 30, 70)))
 

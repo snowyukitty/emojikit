@@ -273,6 +273,16 @@ bend/squash/composite/encode. The rig JSON keeps it reproducible and re-editable
   by per-frame preview PNGs since a GIF `<img>` can't be paused or retimed in-browser), and **staged
   progress** for upload/animate/pack. Backend additions: `/api/presets` returns a `category`;
   `/api/animate` also emits preview-size per-frame PNGs (`_frames/`, excluded from the per-emote zip).
+- **v7 (done):** **head as a first-class part + animation-principles pass** — the biggest
+  expressiveness win, inspired by EmoteLab's curated animation library. `autodetect.detect_head`
+  splits the head off at the narrowest **neck** (per-row width profile; degrades gracefully to
+  whole-body motion for neckless/round/multi-character art). The renderer animates the head about
+  its **neck joint** with the seam-free `bend` (root glued, no tear), so `yes`/`no`/`shy`/`sad`/
+  `confused` are now **real nods/shakes/tilts** instead of the whole image bobbing. Eyes ride with
+  the head (blink moves to the head layer; blush/heart-eyes anchors follow via `warp.bend_point`).
+  Principles: `warp.jump_profile` gives jumps **anticipation crouch -> takeoff stretch -> landing
+  squash** (squash & stretch on the whole character about the feet); appendages get a
+  **follow-through lag** so tips trail the body. New preset channels: `head_nod`/`head_shake`/`head_tilt`.
 
 (Alternative AI route — local AnimateDiff/SVD on the RTX 3070 — remains available for organic motion,
 but the puppet path is the one that guarantees clean alpha, perfect loops, and controllable, on-theme

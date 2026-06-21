@@ -29,3 +29,15 @@
 - v6 studio redesign · light/dark design-token system (segmented theme switch, flash-free) ·
   searchable + category-filtered emote picker · real playback controls (play/pause/scrub/retime
   via per-frame preview PNGs) · staged progress for upload/animate/pack · refreshed docs screenshots.
+- v7 head-as-part + animation-principles (quality pass vs EmoteLab) · `detect_head` neck split
+  (graceful fallback) · real nod/shake/tilt about the neck joint (seam-free bend) · blink+blush+
+  heart-eyes follow the head · jump anticipation/squash-stretch · appendage follow-through lag ·
+  new preset channels head_nod/head_shake/head_tilt; remapped yes/no/shy/sad/confused/sleep/angry.
+
+## v7 follow-ups (next)
+- [ ] Re-run existing saved rigs through `build_auto_rig` to pick up head parts (or add a
+      "re-detect head" button in the web studio for rigs made before v7).
+- [ ] Head shake (`no`) is a 2D z-roll (chibi convention); consider a subtle horizontal
+      shift for a more literal "turn".
+- [ ] Tune `detect_head` neck_ratio/band on more real characters (mascots, full-body animals).
+- [ ] ② mouth + pupil anchors (open/smile/talk, eyes look up for `think`) — builds on v7.

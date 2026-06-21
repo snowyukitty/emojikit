@@ -21,6 +21,10 @@ class Preset:
     bob: float = 0.0           # vertical bob (px, + = dip down then up)
     jump: float = 0.0          # bounce up (px)
     droop: float = 0.0         # slump (sy < 1), for sad
+    # head (independent part, about the neck joint — real nod/shake/tilt)
+    head_nod: float = 0.0      # vertical head dip (px, down-and-back, seam-safe)
+    head_shake: float = 0.0    # head rotation amplitude (deg) about the neck
+    head_tilt: float = 0.0     # constant head lean (deg, + = lean right; e.g. shy/sad)
     # parts
     tail_amp: float = 15.0     # tail bend amplitude (deg)
     part_cycles: int = 1
@@ -60,22 +64,24 @@ LIBRARY: dict[str, Preset] = {
                     fx_sparkles=1.0, fx_stars=0.5),
     "shocked": Preset("shocked", "jolt + shake + '!'",
                       cycles=3, sway_deg=4, jump=8, tail_amp=26, fx_exclaim=True),
-    "confused": Preset("confused", "slow tilt + '?' + sweat",
-                       cycles=1, sway_deg=3, tail_amp=8, fx_question=True, fx_sweat=True),
-    "sleep": Preset("sleep", "slow breathing + zzz",
-                    cycles=1, squeeze=0.03, tail_amp=5, blush=0.2, fx_zzz=True),
-    "sad": Preset("sad", "slump + tears + blue tint",
-                  cycles=1, droop=0.06, bob=6, tail_amp=4,
+    "confused": Preset("confused", "head cocks side to side + '?' + sweat",
+                       cycles=2, head_tilt=10, head_shake=7, tail_amp=8,
+                       fx_question=True, fx_sweat=True),
+    "sleep": Preset("sleep", "slow breathing + head droop + zzz",
+                    cycles=1, squeeze=0.03, head_tilt=8, head_nod=5, tail_amp=5,
+                    blush=0.2, fx_zzz=True),
+    "sad": Preset("sad", "slump + head down + tears + blue tint",
+                  cycles=1, droop=0.06, head_tilt=6, head_nod=10, tail_amp=4,
                   tint=((90, 130, 200), 0.18), fx_tears=True),
     "angry": Preset("angry", "shake + anger mark + red tint",
-                    cycles=3, sway_deg=5, tail_amp=8,
+                    cycles=3, sway_deg=5, head_shake=5, tail_amp=8,
                     tint=((220, 60, 50), 0.16), fx_anger=True),
-    "yes": Preset("yes", "nodding (dip down-up x2)",
-                  cycles=2, bob=18, tail_amp=10, blush=0.3),
-    "no": Preset("no", "head-shake (sway x3)",
-                 cycles=3, sway_deg=6, tail_amp=10),
-    "shy": Preset("shy", "strong blush + look down + sweat",
-                  cycles=1, sway_deg=1.5, bob=6, tail_amp=8, blush=1.0, fx_sweat=True),
+    "yes": Preset("yes", "real head nod (about the neck) x2",
+                  cycles=2, head_nod=26, tail_amp=10, blush=0.3),
+    "no": Preset("no", "real head shake (about the neck) x3",
+                 cycles=3, head_shake=11, tail_amp=10),
+    "shy": Preset("shy", "head tilts down + strong blush + sweat",
+                  cycles=1, head_tilt=9, head_nod=8, tail_amp=8, blush=1.0, fx_sweat=True),
 }
 
 

@@ -21,6 +21,51 @@ def ping(t: float) -> float:
     return math.sin(math.pi * t)
 
 
+def bend_point(pt, pivot, theta_max_deg: float, reach: float):
+    """Where a point lands after `bend()` — same ramped rotation about the pivot.
+
+    Keeps face anchors (eyes/blush/heart-eyes) glued to the head while it nods/tilts,
+    using the exact angle ramp `bend()` applies to pixels at that distance.
+    """
+    if abs(theta_max_deg) < 1e-3:
+        return pt
+    px, py = pivot
+    dx, dy = pt[0] - px, pt[1] - py
+    frac = min(1.0, math.hypot(dx, dy) / max(1.0, reach))
+    frac = 0.5 - 0.5 * math.cos(math.pi * frac)
+    th = math.radians(theta_max_deg) * frac
+    c, s = math.cos(th), math.sin(th)
+    return (px + dx * c - dy * s, py + dx * s + dy * c)
+
+
+def _key(p: float, keys) -> float:
+    """Eased linear interpolation of a keyframed curve (sorted (phase, value) pairs).
+
+    Endpoints at phase 0 and 1 should match so the curve is loop-continuous.
+    """
+    for (p0, v0), (p1, v1) in zip(keys, keys[1:]):
+        if p0 <= p <= p1:
+            k = (p - p0) / (p1 - p0) if p1 > p0 else 0.0
+            k = 0.5 - 0.5 * math.cos(math.pi * k)          # ease in/out each segment
+            return v0 + (v1 - v0) * k
+    return keys[-1][1]
+
+
+def jump_profile(phase: float):
+    """One hop per cycle with the 12-principles feel: anticipation crouch -> takeoff
+    stretch -> airborne arc -> landing squash -> recover. Loop-safe and continuous
+    (keyed so every segment boundary matches, no per-frame pop).
+
+    Returns (lift, squash): lift in [0,1] (multiply by jump px, moves the body up);
+    squash in [-1,1] where +1 = compressed (shorter+wider), -1 = stretched (taller+thinner).
+    """
+    p = phase % 1.0
+    lift = _key(p, [(0.0, 0.0), (0.16, 0.0), (0.48, 1.0), (0.80, 0.0), (1.0, 0.0)])
+    squash = _key(p, [(0.0, 0.0), (0.16, 1.0), (0.30, -0.5), (0.74, -0.2),
+                      (0.86, 0.7), (1.0, 0.0)])
+    return lift, squash
+
+
 def rotate_about(layer: Image.Image, pivot: tuple[float, float], angle_deg: float) -> Image.Image:
     """Rotate a full-canvas layer about a pivot point (canvas coords)."""
     if angle_deg == 0:

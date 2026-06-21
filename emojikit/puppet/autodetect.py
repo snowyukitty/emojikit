@@ -66,6 +66,50 @@ def detect_appendages(subj: np.ndarray, core_frac: float = 0.10, min_area_frac: 
     return out
 
 
+def detect_head(subj: np.ndarray, *, neck_ratio: float = 0.78,
+                min_frac: float = 0.10, max_frac: float = 0.72):
+    """Split the head off at the narrowest 'neck' above the body — a first-class part.
+
+    Pure geometry: scan the per-row width profile for the narrowest cut in the upper
+    body; if it's a real pinch (neck notably narrower than the head above it) and the
+    head is a sane fraction of the subject, return {mask, pivot(neck joint), reach}.
+    Degrades gracefully (returns None) for neckless round blobs / multi-character art,
+    so nod/shake fall back to whole-body motion instead of tearing.
+    """
+    ys, xs = np.where(subj)
+    if ys.size == 0:
+        return None
+    y0, y1, x0, x1 = ys.min(), ys.max(), xs.min(), xs.max()
+    bh = y1 - y0
+    if bh < 20:
+        return None
+    widths = subj.sum(axis=1).astype(float)              # subject pixels per row
+    b0, b1 = y0 + int(0.18 * bh), y0 + int(0.62 * bh)    # plausible neck band
+    if b1 <= b0:
+        return None
+    yn = b0 + int(np.argmin(widths[b0:b1]))
+    head_w = widths[y0:yn].max() if yn > y0 else 0.0
+    if head_w <= 0 or widths[yn] >= neck_ratio * head_w:  # no real pinch -> no head
+        return None
+
+    slab = np.zeros_like(subj)
+    slab[y0:yn + 1] = subj[y0:yn + 1]
+    lbl, n = ndi.label(slab)                              # keep the main head blob only
+    if n == 0:
+        return None
+    sizes = ndi.sum(np.ones_like(lbl), lbl, index=range(1, n + 1))
+    head = lbl == (1 + int(np.argmax(sizes)))
+
+    frac = head.sum() / subj.sum()
+    if frac < min_frac or frac > max_frac:
+        return None
+    cols = np.where(subj[yn])[0]                          # neck joint = neck-row center
+    pvx, pvy = int(cols.mean()), int(yn)
+    hy, hx = np.where(head)
+    reach = float(np.sqrt((hx - pvx) ** 2 + (hy - pvy) ** 2).max())
+    return {"mask": head, "pivot": (pvx, pvy), "reach": reach}
+
+
 def detect_eyes(img: Image.Image, subj: np.ndarray, max_pair=True):
     """Dark, compact, roughly symmetric blobs in the upper region → eye anchors."""
     L = np.asarray(img.convert("L"))
@@ -115,6 +159,7 @@ def build_auto_rig(src: str, *, name="auto", out_dir="rigs", margin=0.16,
     W, H = img.size
     subj = _subject(img)
     apps = detect_appendages(subj)
+    head = detect_head(subj)
     eyes = detect_eyes(img, subj)
 
     canvas = int(max(W, H) * (1 + 2 * margin))
@@ -122,15 +167,29 @@ def build_auto_rig(src: str, *, name="auto", out_dir="rigs", margin=0.16,
     root = ensure_dir(Path(out_dir) / name)
     mdir = ensure_dir(root / "masks")
 
+    def _save_mask(arr, fname):
+        cmask = Image.new("L", (canvas, canvas), 0)
+        cmask.paste(Image.fromarray((arr * 255).astype("uint8"), "L"), (ox, oy))
+        mp = mdir / fname
+        cmask.save(mp)
+        return str(mp)
+
     parts = []
+    if head is not None:
+        # Head is a first-class part (real nod/shake/tilt). Ears ride with it -> drop
+        # them as separate parts so they don't detach from the moving head.
+        animate_roles = tuple(r for r in animate_roles if r != "ear")
+        parts.append(Part(name="head", role="head", mask=_save_mask(head["mask"], "head.png"),
+                          pivot=(head["pivot"][0] + ox, head["pivot"][1] + oy),
+                          reach=head["reach"], z=5))
     for idx, a in enumerate(apps):
         if a["role"] not in animate_roles:
             continue
-        cmask = Image.new("L", (canvas, canvas), 0)
-        cmask.paste(Image.fromarray((a["mask"] * 255).astype("uint8"), "L"), (ox, oy))
-        mp = mdir / f"{a['role']}_{idx}.png"
-        cmask.save(mp)
-        parts.append(Part(name=f"{a['role']}_{idx}", role=a["role"], mask=str(mp),
+        # An appendage that lies inside the head slab is part of the head -> skip it.
+        if head is not None and a["pivot"][1] <= head["pivot"][1]:
+            continue
+        mp = _save_mask(a["mask"], f"{a['role']}_{idx}.png")
+        parts.append(Part(name=f"{a['role']}_{idx}", role=a["role"], mask=mp,
                           pivot=(a["pivot"][0] + ox, a["pivot"][1] + oy),
                           reach=a["reach"], z=-1))
 
