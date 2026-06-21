@@ -198,11 +198,15 @@ _PREVIEW_PX = 256
 
 
 def _preview_frames(sid: str, preset: str, frames) -> list[str]:
+    from ..core.encode import stroke_width
+    from ..core.enhance import add_stroke
+
     fdir = DATA / sid / preset / "_frames"
     fdir.mkdir(parents=True, exist_ok=True)
     urls = []
     for i, fr in enumerate(frames):
         im = fr.resize((_PREVIEW_PX, _PREVIEW_PX), Image.LANCZOS)
+        im = add_stroke(im, stroke_width(_PREVIEW_PX), color=(255, 255, 255))  # match export
         im.save(fdir / f"{i:03d}.png")
         urls.append(f"/files/{sid}/{preset}/_frames/{i:03d}.png")
     return urls

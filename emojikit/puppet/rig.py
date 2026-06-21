@@ -129,8 +129,13 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
             q = warp.bend_point(pt, tuple(hp.pivot), head_ang, hp.reach)
             return (q[0], q[1] + head_dy)
 
-        # body squash (squeeze) and slump (droop), feet planted
-        body = warp.scale_about(body0, feet, 1.0 - pr.squeeze * s, 1.0 + pr.squeeze * 0.6 * s - pr.droop * s)
+        # body squash (squeeze) + slump (droop) + always-on idle breathe, feet planted.
+        # The breathe is a slow chest rise (taller+narrower on inhale) so even head-only
+        # presets (yes/no/shy) never look frozen below the neck.
+        bph = 0.5 - 0.5 * math.cos(2 * math.pi * t)
+        body = warp.scale_about(body0, feet,
+                                1.0 - pr.squeeze * s - 0.6 * pr.breathe * bph,
+                                1.0 + pr.squeeze * 0.6 * s - pr.droop * s + pr.breathe * bph)
         # blink lives on the head layer when the head is split off, else on the body
         if eyeband and pr.blink and head_part is None:
             bt = max(0.0, 1.0 - abs(t - 0.18) / 0.05)
@@ -234,19 +239,21 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
     return out
 
 
-def export(frames, name, out_dir="output", platform="all", fps=20, webp=True):
+def export(frames, name, out_dir="output", platform="all", fps=20, webp=True, stroke="white"):
     from ..core.encode import encode_gif, encode_webp
+    from ..core.enhance import STROKE_COLORS
 
+    color = STROKE_COLORS.get(stroke) if isinstance(stroke, str) else stroke
     platforms = profiles.resolve(platform)
     root = ensure_dir(Path(out_dir) / name)
     rep = {"name": name, "outputs": []}
     if webp:
-        encode_webp(frames, profiles.MASTER_SIZE, fps, root / "master.webp")
+        encode_webp(frames, profiles.MASTER_SIZE, fps, root / "master.webp", stroke=color)
     for p in platforms:
         pdir = ensure_dir(root / p.name)
         for size in p.sizes:
             gif = pdir / f"{name}_{size}.gif"
-            r = encode_gif(frames, size, fps, gif, budget=p.animated_budget)
+            r = encode_gif(frames, size, fps, gif, budget=p.animated_budget, stroke=color)
             r.update({"platform": p.name, "size": size, "budget": p.animated_budget, "file": str(gif)})
             rep["outputs"].append(r)
     return rep

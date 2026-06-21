@@ -158,23 +158,25 @@ def render(src_path: str | Path, frames: int = 24) -> list[Image.Image]:
     return out
 
 
-def export(frames, name, out_dir="output", platform="all", fps=20, keep_master=True) -> dict:
+def export(frames, name, out_dir="output", platform="all", fps=20, keep_master=True, stroke="white") -> dict:
     from ..core.encode import encode_gif, encode_webp
+    from ..core.enhance import STROKE_COLORS
 
+    color = STROKE_COLORS.get(stroke) if isinstance(stroke, str) else stroke
     platforms = profiles.resolve(platform)
     root = ensure_dir(Path(out_dir) / name)
     report = {"name": name, "frames": len(frames), "fps": fps, "outputs": []}
 
     if keep_master:
         mp = root / "master.webp"
-        encode_webp(frames, profiles.MASTER_SIZE, fps, mp)
+        encode_webp(frames, profiles.MASTER_SIZE, fps, mp, stroke=color)
         report["outputs"].append({"file": str(mp), "kind": "archive"})
 
     for p in platforms:
         pdir = ensure_dir(root / p.name)
         for size in p.sizes:
             gif = pdir / f"{name}_{size}.gif"
-            rep = encode_gif(frames, size, fps, gif, budget=p.animated_budget)
+            rep = encode_gif(frames, size, fps, gif, budget=p.animated_budget, stroke=color)
             rep.update({"file": str(gif), "platform": p.name, "size": size, "budget": p.animated_budget})
             report["outputs"].append(rep)
     return report

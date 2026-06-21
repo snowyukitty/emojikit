@@ -83,6 +83,12 @@ whole-image transforms. Workflow: auto-rig (or SAM-segment) → rig JSON → ani
 Presets: `love dance celebrate happy shocked confused sleep sad angry yes no shy`.
 One rig → all of them. See `DESIGN.md §10.5`.
 
+Quality (v7–v8): the **head is a real rigged part** — `yes`/`no`/`shy` are genuine
+nods/shakes/tilts about the neck, not the whole image bobbing; jumps have anticipation +
+squash/stretch; an **always-on idle breathe** keeps the body alive. Every emote also gets a
+**size-adaptive sticker outline** (the #1 small-size legibility win — bolder, relatively, at
+28 px) so it pops on Twitch/Discord chat backgrounds. Tune with `--stroke white|black|none`.
+
 ### Animate — quick whole-image effects (legacy)
 
 ```powershell

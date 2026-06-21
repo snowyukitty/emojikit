@@ -283,6 +283,17 @@ bend/squash/composite/encode. The rig JSON keeps it reproducible and re-editable
   Principles: `warp.jump_profile` gives jumps **anticipation crouch -> takeoff stretch -> landing
   squash** (squash & stretch on the whole character about the feet); appendages get a
   **follow-through lag** so tips trail the body. New preset channels: `head_nod`/`head_shake`/`head_tilt`.
+- **v8 (done):** **emote legibility + life pass** — researched real emote makers (EmoteLab,
+  OWN3D, MakeEmoji) and the Twitch/Discord design law "*test at 28 px first; a bold outline is
+  the #1 small-size legibility win*". Two universal wins applied to **every** emote:
+  - **Size-adaptive sticker outline.** The animated/puppet path had no outline (raw silhouette
+    -> mush at 28 px on a busy chat background). We now stroke **after** resizing to each export
+    size (`encode.stroke_width` ~= `size/56`: 1px@28, 2px@112, capped 4) — a master-res stroke
+    can't be both readable at 28 and not-chunky at 128. Plumbed through `encode_gif`/`encode_webp`
+    and the web preview PNGs (so preview == download). Default white, `--stroke white|black|none`.
+  - **Always-on idle breathe** (Adobe Character Animator's most basic behavior): a slow chest
+    rise (taller+narrower on inhale, feet planted) on the body, so head-only presets
+    (`yes`/`no`/`shy`) never look frozen below the neck. New preset channel `breathe` (~2%).
 
 (Alternative AI route — local AnimateDiff/SVD on the RTX 3070 — remains available for organic motion,
 but the puppet path is the one that guarantees clean alpha, perfect loops, and controllable, on-theme

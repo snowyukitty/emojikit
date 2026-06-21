@@ -9,13 +9,31 @@ from pathlib import Path
 
 from PIL import Image
 
+from .enhance import add_stroke
+
 FFMPEG = shutil.which("ffmpeg") or "ffmpeg"
 
 
-def _resize_frames(frames: list[Image.Image], size: int) -> list[Image.Image]:
+def stroke_width(size: int) -> int:
+    """Sticker-outline width (px) for a target size — bolder, relatively, at small sizes.
+
+    Emote design law: an outline of >=2px at 112px is what keeps a character legible
+    when it shrinks to 28px (Twitch's main size). We therefore stroke AFTER resizing to
+    each export size, not once at master res (a master-res stroke is too thin at 28 and
+    too thick at 128). ~size/56 gives 1px@28, 1px@56, 2px@112, 2px@128, capped at 4.
+    """
+    return max(1, min(4, round(size / 56)))
+
+
+def _resize_frames(frames: list[Image.Image], size: int, stroke=None) -> list[Image.Image]:
     if frames[0].size == (size, size):
-        return frames
-    return [f.resize((size, size), Image.LANCZOS) for f in frames]
+        sized = list(frames)
+    else:
+        sized = [f.resize((size, size), Image.LANCZOS) for f in frames]
+    if stroke is not None:
+        w = stroke_width(size)
+        sized = [add_stroke(f, w, color=stroke) for f in sized]
+    return sized
 
 
 def _run_ffmpeg_gif(png_dir: Path, fps: int, max_colors: int, out_path: Path) -> None:
@@ -42,13 +60,15 @@ def encode_gif(
     fps: int,
     out_path: Path,
     budget: int | None = None,
+    stroke=None,
 ) -> dict:
     """Encode frames to a GIF at `size`, shrinking under `budget` bytes if needed.
 
     Returns a report dict: {bytes, colors, frames, fit, sacrificed[]}.
     Never silently truncates — every reduction is recorded in `sacrificed`.
+    `stroke` is an (r,g,b) sticker-outline color applied per-size (None = no outline).
     """
-    sized = _resize_frames(frames, size)
+    sized = _resize_frames(frames, size, stroke)
     sacrificed: list[str] = []
 
     # Reduction ladder: drop palette colors first (least visible), then frames.
@@ -93,9 +113,10 @@ def encode_gif(
     return report
 
 
-def encode_webp(frames: list[Image.Image], size: int, fps: int, out_path: Path, quality: int = 90) -> dict:
+def encode_webp(frames: list[Image.Image], size: int, fps: int, out_path: Path,
+                quality: int = 90, stroke=None) -> dict:
     """Animated WebP with true alpha — the high-quality archive copy."""
-    sized = _resize_frames(frames, size)
+    sized = _resize_frames(frames, size, stroke)
     duration = int(round(1000 / fps))
     sized[0].save(
         out_path,

@@ -53,6 +53,7 @@ def auto(
     platform: str = typer.Option("all", "--platform", "-p"),
     name: str = typer.Option(None, "--name", help="rig name (default: image stem)"),
     out: str = typer.Option("output", "--out", "-o"),
+    stroke: str = typer.Option("white", "--stroke", help="sticker outline: white|black|none"),
 ):
     """Fully automatic: auto-rig (SAM-free geometry) + animate with a preset (v4)."""
     from pathlib import Path
@@ -67,7 +68,7 @@ def auto(
     typer.secho(f"\n  auto-rigged '{image}': parts={roles}  eyes={len(eyes)}", fg="cyan")
     typer.echo(f"  rig saved: rigs/{rig_name}/rig.json (editable)\n")
     frames = R.render(rg, P.get(preset))
-    rep = R.export(frames, f"{rig_name}_{preset}", out_dir=out, platform=platform, fps=rg.fps)
+    rep = R.export(frames, f"{rig_name}_{preset}", out_dir=out, platform=platform, fps=rg.fps, stroke=stroke)
     for o in rep["outputs"]:
         fit = "ok " if o.get("fit") else "OVER"
         typer.secho(f"  [{fit}] {o['platform']:<7} {o['size']:>3}px  {_human(o['bytes'])}",
@@ -81,6 +82,7 @@ def emote(
     preset: str = typer.Option("love", "--preset", help="motion+FX preset name"),
     platform: str = typer.Option("all", "--platform", "-p", help="slack|discord|twitch|all"),
     out: str = typer.Option("output", "--out", "-o", help="output directory"),
+    stroke: str = typer.Option("white", "--stroke", help="sticker outline: white|black|none"),
 ):
     """Animate a rigged character with a motion preset (puppet engine, Function 2 v3)."""
     from pathlib import Path
@@ -91,7 +93,7 @@ def emote(
     rg = R.Rig.load(rig)
     frames = R.render(rg, P.get(preset))
     name = f"{Path(rig).parent.name}_{preset}"
-    rep = R.export(frames, name, out_dir=out, platform=platform, fps=rg.fps)
+    rep = R.export(frames, name, out_dir=out, platform=platform, fps=rg.fps, stroke=stroke)
     typer.secho(f"\n  emote '{name}'  ({P.get(preset).desc})\n", fg="cyan")
     for o in rep["outputs"]:
         fit = "ok " if o.get("fit") else "OVER"

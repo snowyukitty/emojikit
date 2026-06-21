@@ -16,6 +16,7 @@ class Preset:
     desc: str = ""
     cycles: int = 1            # oscillations of sway/bob per loop
     # body
+    breathe: float = 0.02      # always-on idle breathing (chest rise), so nothing is dead
     squeeze: float = 0.0       # anchored squash amplitude (narrower+taller)
     sway_deg: float = 0.0      # side-to-side rotation about feet
     bob: float = 0.0           # vertical bob (px, + = dip down then up)

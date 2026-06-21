@@ -33,6 +33,10 @@
   (graceful fallback) · real nod/shake/tilt about the neck joint (seam-free bend) · blink+blush+
   heart-eyes follow the head · jump anticipation/squash-stretch · appendage follow-through lag ·
   new preset channels head_nod/head_shake/head_tilt; remapped yes/no/shy/sad/confused/sleep/angry.
+- v8 legibility + life (researched emote makers + Twitch 28px design law) · size-adaptive
+  sticker outline on the animated path (stroke AFTER per-size resize; encode_gif/webp + web
+  preview, so preview==download; `--stroke white|black|none`) · always-on idle breathe
+  (Character Animator behavior) so head-only presets aren't frozen below the neck.
 
 ## v7 follow-ups (next)
 - [ ] Re-run existing saved rigs through `build_auto_rig` to pick up head parts (or add a
