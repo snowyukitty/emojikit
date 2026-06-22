@@ -78,6 +78,10 @@ whole-image transforms. Workflow: auto-rig (or SAM-segment) → rig JSON → ani
 ./.venv/Scripts/python.exe -m emojikit presets                                  # list emote presets
 ./.venv/Scripts/python.exe -m emojikit emote rigs/hugcats/rig.json --preset love
 ./.venv/Scripts/python.exe -m emojikit emote rigs/hugcats/rig.json --preset dance -p twitch
+
+# add a bold meme caption (text emote: F / GG / POG / OMEGALUL ...)
+./.venv/Scripts/python.exe -m emojikit auto assets/fox.png --preset celebrate --caption GG
+./.venv/Scripts/python.exe -m emojikit auto assets/fox.png --preset sad --caption F --caption-pos top
 ```
 
 Presets: `love dance celebrate happy shocked confused sleep sad angry yes no shy
@@ -92,6 +96,9 @@ squash/stretch; an **always-on idle breathe** keeps the body alive. Every emote 
 28 px) so it pops on Twitch/Discord chat backgrounds. Tune with `--stroke white|black|none`.
 Emotes also render at **15 fps** (the emote-maker sweet spot — 20 fps just inflates the GIF
 with no visible gain at 28 px, and the smaller file leaves more palette headroom on busy art).
+Add a **bold meme caption** (`--caption GG`, `--caption-pos top|bottom`) for text emotes
+(F / GG / POG / …) — auto-fit to width with a thick outline, placed in the margin band so it
+doesn't cover the face.
 
 ### Animate — quick whole-image effects (legacy)
 

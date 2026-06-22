@@ -157,6 +157,42 @@ def draw_text_pop(canvas_size, t, anchors, text, color, window=(0.15, 0.85), siz
     return out
 
 
+def draw_caption(canvas_size, text, *, pos="bottom", fill=(255, 255, 255),
+                 stroke=(20, 20, 20), max_width_frac=0.94, max_height_frac=0.24,
+                 margin_frac=0.04) -> Image.Image:
+    """A bold meme-style caption (white fill + thick dark outline), auto-fit to width.
+
+    Steady (not flashing) for legibility — text emotes live or die on being readable.
+    Font size grows until the text just fills `max_width_frac` of the canvas (or the
+    height cap), so a short word like 'GG'/'F'/'POG' lands large; placed in the canvas
+    margin band (bottom by default) so it doesn't cover the face.
+    """
+    W, H = canvas_size
+    out = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
+    text = (text or "").strip()
+    if not text:
+        return out
+    target_w, target_h = W * max_width_frac, H * max_height_frac
+    d = ImageDraw.Draw(out)
+    best, size = 8, 8
+    while size < H:                                   # grow until it no longer fits
+        f = _font(size)
+        sw = max(2, size // 10)
+        bb = d.textbbox((0, 0), text, font=f, stroke_width=sw)
+        if (bb[2] - bb[0]) > target_w or (bb[3] - bb[1]) > target_h:
+            break
+        best, size = size, size + 4
+    f = _font(best)
+    sw = max(2, best // 10)
+    bb = d.textbbox((0, 0), text, font=f, stroke_width=sw)
+    th = bb[3] - bb[1]
+    cx = W // 2
+    cy = int(margin_frac * H + th / 2) if pos == "top" else int(H * (1 - margin_frac) - th / 2)
+    d.text((cx, cy), text, font=f, fill=fill + (255,), anchor="mm",
+           stroke_width=sw, stroke_fill=stroke + (255,))
+    return out
+
+
 def floating_glyphs(canvas_size, t, spawns, kind="star", rise=150, size=24):
     """Generic rising/fading FX stream (kind: star|note|heart)."""
     out = Image.new("RGBA", canvas_size, (0, 0, 0, 0))

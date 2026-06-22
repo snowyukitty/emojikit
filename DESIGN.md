@@ -306,6 +306,14 @@ bend/squash/composite/encode. The rig JSON keeps it reproducible and re-editable
     `nervous` (fast tremble + sweat) and `cry` (downcast sob + waterfall tears). All three are
     built from **any-rig channels** (head nod/shake + body bob/jump/squeeze/droop + FX), so they
     need no limb detection and work on any character — verified rendering on the fox face-rig.
+- **v10 (done):** **text-caption emotes** — a whole high-frequency emote category (F / GG / POG /
+  OMEGALUL / reaction words) that the puppet path couldn't make. `overlays.draw_caption` draws a
+  steady (not flashing, for legibility) bold caption: white fill + thick dark outline, font size
+  grown until the text just fills ~94% of the canvas width (or a height cap), placed in the canvas
+  margin band (bottom default, `top` optional) so it never covers the face. Long words auto-shrink.
+  Threaded through `render(caption=, caption_pos=)` and the `auto`/`emote` CLIs (`--caption`,
+  `--caption-pos`); the value is never echoed to the console (keeps the Windows cp1252 ASCII rule).
+  Verified legible at master/112px and exporting within budget; web text field is the next slice.
 
 (Alternative AI route — local AnimateDiff/SVD on the RTX 3070 — remains available for organic motion,
 but the puppet path is the one that guarantees clean alpha, perfect loops, and controllable, on-theme

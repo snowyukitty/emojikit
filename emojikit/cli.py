@@ -54,6 +54,8 @@ def auto(
     name: str = typer.Option(None, "--name", help="rig name (default: image stem)"),
     out: str = typer.Option("output", "--out", "-o"),
     stroke: str = typer.Option("white", "--stroke", help="sticker outline: white|black|none"),
+    caption: str = typer.Option("", "--caption", help="bold meme caption text (e.g. GG, F, POG)"),
+    caption_pos: str = typer.Option("bottom", "--caption-pos", help="caption position: bottom|top"),
 ):
     """Fully automatic: auto-rig (SAM-free geometry) + animate with a preset (v4)."""
     from pathlib import Path
@@ -67,7 +69,7 @@ def auto(
     roles = [p.role for p in rg.parts]
     typer.secho(f"\n  auto-rigged '{image}': parts={roles}  eyes={len(eyes)}", fg="cyan")
     typer.echo(f"  rig saved: rigs/{rig_name}/rig.json (editable)\n")
-    frames = R.render(rg, P.get(preset))
+    frames = R.render(rg, P.get(preset), caption=caption, caption_pos=caption_pos)
     rep = R.export(frames, f"{rig_name}_{preset}", out_dir=out, platform=platform, fps=rg.fps, stroke=stroke)
     for o in rep["outputs"]:
         fit = "ok " if o.get("fit") else "OVER"
@@ -83,6 +85,8 @@ def emote(
     platform: str = typer.Option("all", "--platform", "-p", help="slack|discord|twitch|all"),
     out: str = typer.Option("output", "--out", "-o", help="output directory"),
     stroke: str = typer.Option("white", "--stroke", help="sticker outline: white|black|none"),
+    caption: str = typer.Option("", "--caption", help="bold meme caption text (e.g. GG, F, POG)"),
+    caption_pos: str = typer.Option("bottom", "--caption-pos", help="caption position: bottom|top"),
 ):
     """Animate a rigged character with a motion preset (puppet engine, Function 2 v3)."""
     from pathlib import Path
@@ -91,7 +95,7 @@ def emote(
     from .puppet import rig as R
 
     rg = R.Rig.load(rig)
-    frames = R.render(rg, P.get(preset))
+    frames = R.render(rg, P.get(preset), caption=caption, caption_pos=caption_pos)
     name = f"{Path(rig).parent.name}_{preset}"
     rep = R.export(frames, name, out_dir=out, platform=platform, fps=rg.fps, stroke=stroke)
     typer.secho(f"\n  emote '{name}'  ({P.get(preset).desc})\n", fg="cyan")

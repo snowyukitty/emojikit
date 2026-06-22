@@ -15,6 +15,8 @@
 - [ ] Wire gpt-image-1 API path end-to-end (needs OPENAI_API_KEY) and A/B it.
 
 ## Nice-to-have / future
+- [ ] Web: caption text field (engine + CLI shipped in v10; just needs a UI input wired to
+      `render(caption=, caption_pos=)`, with a live char-count and a 28px legibility hint).
 - [ ] Web: add-a-part (draw/brush a mask) in addition to drag-pivot + delete.
 - [ ] Web: per-part reach slider; live (debounced) re-render preview.
 - [ ] Web: real backend progress via SSE/WebSocket (current progress bars are estimated stages,
@@ -42,6 +44,11 @@
   1.2s loop, more palette headroom on busy art) · 3 most-used reaction presets built from
   any-rig channels: `laugh` (KEKW/LUL hop + tears of joy), `nervous` (monkaS tremble + sweat),
   `cry` (downcast sob + waterfall tears) · all visually verified on the fox face-rig.
+- v10 text-caption emotes (a whole high-use category the puppet path lacked) · `draw_caption`
+  bold white-fill + thick-outline, auto-fit to ~94% canvas width, margin-band placement
+  (bottom default / top) so it doesn't cover the face · `render(caption=, caption_pos=)` +
+  `--caption`/`--caption-pos` on auto/emote (value never echoed -> keeps cp1252 ASCII rule) ·
+  verified legible at master/112px, exports within budget.
 
 ## v7 follow-ups (next)
 - [ ] Re-run existing saved rigs through `build_auto_rig` to pick up head parts (or add a

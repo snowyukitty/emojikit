@@ -76,7 +76,7 @@ def _flat_alpha(size, mask, intensity):
     return ImageChops.multiply(mask, Image.new("L", size, int(255 * intensity)))
 
 
-def render(rig: Rig, preset=None) -> list[Image.Image]:
+def render(rig: Rig, preset=None, caption: str = "", caption_pos: str = "bottom") -> list[Image.Image]:
     from .presets import get as get_preset
 
     pr = preset or get_preset("love")
@@ -109,6 +109,9 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
                  min(y for _, y in rig.eyes) - 130))) if rig.eyes else (cv // 2, cv // 5))
     eyeband = (rig.C(min(x for x, _ in rig.eyes) - 30, min(y for _, y in rig.eyes) - 22) +
                rig.C(max(x for x, _ in rig.eyes) + 30, max(y for _, y in rig.eyes) + 22)) if rig.eyes else None
+
+    # A caption is steady, so render it once and composite onto every frame (on top).
+    caption_layer = overlays.draw_caption((cv, cv), caption, pos=caption_pos) if caption else None
 
     out = []
     n = rig.frames
@@ -234,6 +237,9 @@ def render(rig: Rig, preset=None) -> list[Image.Image]:
             frame.alpha_composite(overlays.anger((cv, cv), t, (head[0] + 20, head[1] + 30)))
         if pr.fx_sweat:
             frame.alpha_composite(overlays.sweat((cv, cv), t, (head[0] + 40, head[1] + 40)))
+
+        if caption_layer is not None:
+            frame.alpha_composite(caption_layer)
 
         out.append(frame)
     return out
