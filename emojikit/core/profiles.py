@@ -37,8 +37,11 @@ ALL: dict[str, Platform] = {p.name: p for p in (SLACK, DISCORD, TWITCH)}
 # The high-quality archive copy we always keep regardless of platform.
 MASTER_SIZE = 512
 
-# Animation defaults (sweet spot from research: 12-24 frames @ ~20 fps).
-DEFAULT_FPS = 20
+# Animation defaults. Research across emote makers (Twitch/BTTV/7TV guides) is consistent:
+# 10-15 fps is the sweet spot for chat emotes - higher fps just inflates the GIF with no
+# visible gain at 28px, and a smaller file leaves more palette headroom (cleaner color)
+# on busy art. 18 frames @ 15 fps = a 1.2s loop, same duration as the old 24f@20fps.
+DEFAULT_FPS = 15
 DEFAULT_FRAMES = 18
 
 

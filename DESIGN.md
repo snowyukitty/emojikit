@@ -294,6 +294,18 @@ bend/squash/composite/encode. The rig JSON keeps it reproducible and re-editable
   - **Always-on idle breathe** (Adobe Character Animator's most basic behavior): a slow chest
     rise (taller+narrower on inhale, feet planted) on the body, so head-only presets
     (`yes`/`no`/`shy`) never look frozen below the neck. New preset channel `breathe` (~2%).
+- **v9 (done):** **reaction coverage + frame-rate right-sizing** — another emote-maker research
+  pass (Twitch/BTTV/7TV/FFZ guides). Two findings, both applied:
+  - **Frame rate -> 15 fps.** Every guide agrees 10-15 fps is the emote sweet spot; 20 fps just
+    inflates the GIF with no visible gain at 28 px, and a smaller file leaves more palette
+    headroom (cleaner color) on busy art. The puppet default moved 24f@20fps -> 18f@15fps (same
+    1.2s loop). Measured ~25% smaller files (fox/love @112px: 80KB -> 62KB) at unchanged 256-color
+    quality, i.e. pure headroom for complex characters. (`Rig`/`build_auto_rig`/`DEFAULT_FPS`.)
+  - **The most-used reaction categories were missing.** Research: the highest-use emotes are
+    laugh (KEKW/LUL), anxious (monkaS) and sob. Added `laugh` (joyful hop + tears of joy),
+    `nervous` (fast tremble + sweat) and `cry` (downcast sob + waterfall tears). All three are
+    built from **any-rig channels** (head nod/shake + body bob/jump/squeeze/droop + FX), so they
+    need no limb detection and work on any character — verified rendering on the fox face-rig.
 
 (Alternative AI route — local AnimateDiff/SVD on the RTX 3070 — remains available for organic motion,
 but the puppet path is the one that guarantees clean alpha, perfect loops, and controllable, on-theme

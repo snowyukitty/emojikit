@@ -41,8 +41,8 @@ class Rig:
     head: tuple[int, int] = (0, 0)                                # image coords (FX anchor); auto if (0,0)
     hearts: list[tuple[int, int, float]] = field(default_factory=list)   # image x,y,phase
     sparkles: list[tuple[int, int, int, float]] = field(default_factory=list)
-    fps: int = 20
-    frames: int = 24
+    fps: int = 15
+    frames: int = 18
 
     def save(self, path: str | Path):
         d = asdict(self)

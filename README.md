@@ -80,14 +80,18 @@ whole-image transforms. Workflow: auto-rig (or SAM-segment) → rig JSON → ani
 ./.venv/Scripts/python.exe -m emojikit emote rigs/hugcats/rig.json --preset dance -p twitch
 ```
 
-Presets: `love dance celebrate happy shocked confused sleep sad angry yes no shy`.
-One rig → all of them. See `DESIGN.md §10.5`.
+Presets: `love dance celebrate happy shocked confused sleep sad angry yes no shy
+laugh nervous cry`. One rig → all of them. The last three cover the most-used reaction
+categories (KEKW/LUL laugh, monkaS nervous, sob) and are built from any-rig channels
+(head + body + FX), so they work even when no limbs are detected. See `DESIGN.md §10.5`.
 
 Quality (v7–v8): the **head is a real rigged part** — `yes`/`no`/`shy` are genuine
 nods/shakes/tilts about the neck, not the whole image bobbing; jumps have anticipation +
 squash/stretch; an **always-on idle breathe** keeps the body alive. Every emote also gets a
 **size-adaptive sticker outline** (the #1 small-size legibility win — bolder, relatively, at
 28 px) so it pops on Twitch/Discord chat backgrounds. Tune with `--stroke white|black|none`.
+Emotes also render at **15 fps** (the emote-maker sweet spot — 20 fps just inflates the GIF
+with no visible gain at 28 px, and the smaller file leaves more palette headroom on busy art).
 
 ### Animate — quick whole-image effects (legacy)
 

@@ -153,7 +153,7 @@ def detect_eyes(img: Image.Image, subj: np.ndarray, max_pair=True):
 
 
 def build_auto_rig(src: str, *, name="auto", out_dir="rigs", margin=0.16,
-                   animate_roles=("tail", "ear"), fps=20, frames=24) -> Rig:
+                   animate_roles=("tail", "ear"), fps=15, frames=18) -> Rig:
     """Detect parts + eyes and write an editable rig JSON. The human/AI loop can tweak it."""
     img = Image.open(src).convert("RGBA")
     W, H = img.size

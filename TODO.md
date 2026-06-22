@@ -37,6 +37,11 @@
   sticker outline on the animated path (stroke AFTER per-size resize; encode_gif/webp + web
   preview, so preview==download; `--stroke white|black|none`) · always-on idle breathe
   (Character Animator behavior) so head-only presets aren't frozen below the neck.
+- v9 reaction coverage + frame-rate right-sizing (researched Twitch/BTTV/7TV/FFZ guides) ·
+  puppet default 24f@20fps -> 18f@15fps (10-15fps emote sweet spot; ~25% smaller GIFs, same
+  1.2s loop, more palette headroom on busy art) · 3 most-used reaction presets built from
+  any-rig channels: `laugh` (KEKW/LUL hop + tears of joy), `nervous` (monkaS tremble + sweat),
+  `cry` (downcast sob + waterfall tears) · all visually verified on the fox face-rig.
 
 ## v7 follow-ups (next)
 - [ ] Re-run existing saved rigs through `build_auto_rig` to pick up head parts (or add a

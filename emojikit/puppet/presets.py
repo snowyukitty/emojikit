@@ -83,6 +83,17 @@ LIBRARY: dict[str, Preset] = {
                  cycles=3, head_shake=11, tail_amp=10),
     "shy": Preset("shy", "head tilts down + strong blush + sweat",
                   cycles=1, head_tilt=9, head_nod=8, tail_amp=8, blush=1.0, fx_sweat=True),
+    # --- high-use reaction emotes (KEKW / monkaS / sob), built from safe any-rig
+    #     channels (head + body + FX) so they work even with no detected limbs.
+    "laugh": Preset("laugh", "hopping with laughter + tears of joy (KEKW/LUL)",
+                    cycles=3, jump=7, head_nod=10, squeeze=0.04, tail_amp=12,
+                    blush=0.5, fx_tears=True),
+    "nervous": Preset("nervous", "anxious trembling + sweat (monkaS)",
+                      cycles=6, sway_deg=1.6, head_shake=3, squeeze=0.018, tail_amp=6,
+                      fx_sweat=True),
+    "cry": Preset("cry", "downcast sob + heavy waterfall tears",
+                  cycles=2, bob=6, head_nod=16, droop=0.03, squeeze=0.03, tail_amp=5,
+                  fx_tears=True),
 }
 
 
